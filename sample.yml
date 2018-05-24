@@ -1,0 +1,11 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no
+  tasks:
+    - block:
+        - name: --- SEE INSTALLATION ---
+          debug: msg="[++++ | {{ lookup('pipe','date') }} | see-install.yml | INSTALLING SEE | onto 15.112.153.42 | using see-install.json | ++++]"
+
+        - name: --- OCCP INSTALLATION ---
+          debug: msg="[++++ | {{ lookup('pipe','date') }} | occp-install.yml | INSTALLING OCCP | onto 15.112.153.42 | using see-install.json | ++++]"
