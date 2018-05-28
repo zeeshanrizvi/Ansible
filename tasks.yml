@@ -1,3 +1,32 @@
- - name: --- TAS INSTALLATION ---
-   debug: msg="[++++ | {{ lookup('pipe','date') }} | tas-install.yml | INSTALLING TAS | onto 15.112.153.42 | using see-install.json | ++++]"
-   
+---
+    - name: --- SET JSON FILE --
+      set_fact:
+         json: "{{lookup('file','{{property}}') | from_json}}"
+
+    - name: --- PARSING JSON & SETTING FACTS ---
+      set_fact:
+         host: "{{ json['HOST'] }}"
+         hostname: "{{ json['HostName'] }}"
+         role: "{{ json['SEE_ROLE'] }}"
+         instance: "{{ json['SEE_INSTANCES'] }}"
+
+    - debug: msg="[++++  | {{ lookup('pipe','date') }} | see-start.yml | STARTING SEE | {{ instance }} | on {{ host }} | using {{ property }} | ++++]"
+
+    - block:
+       - name: --- STARTING APPLICATION SERVICE ---
+         shell: /opt/OC/bin/see {{item}} stop ;>/var/opt/OC/hpoc-see/wildfly/server/see-{{item}}/log/server.log ; /opt/OC/bin/see {{item}} start
+         with_items: "{{instance.split(',')}}"
+       - name: --- WAIT FOR 60 SECS ---
+         wait_for: timeout=60
+         delegate_to: localhost
+       - shell: /opt/OC/bin/see {{item}} stop ;>/var/opt/OC/hpoc-see/wildfly/server/see-{{item}}/log/server.log ; /opt/OC/bin/see {{item}} start
+         with_items: "{{instance.split(',')}}"
+       - name: --- WAIT FOR 10 SECS ---
+         wait_for: timeout=10
+       - shell: cat /var/opt/OC/hpoc-see/wildfly/server/see-{{item}}/log/server.log | grep -e "UNLOCKED_ENABLED_IDLE" | wc -l
+         register: result
+         with_items: "{{instance.split(',')}}"
+         until: result.stdout.find("1") != -1
+         retries: 10
+         delay: 20
+
