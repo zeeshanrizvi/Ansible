@@ -9,3 +9,5 @@
 
         - name: --- OCCP INSTALLATION ---
           debug: msg="[++++ | {{ lookup('pipe','date') }} | occp-install.yml | INSTALLING OCCP | onto 15.112.153.42 | using see-install.json | ++++]"
+        
+        - include_tasks: tasks.yml
